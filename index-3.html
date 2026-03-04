@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claude Artifact</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    html, body { height: 100%; }
+    body { margin: 0; background: #F6F3EF; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="env,react">
+const { useState, useMemo } = React;
+const DB = {
+  pharmacology: {
+    label: "Psychopharmacology",
+    icon: "💊",
+    accent: "#1D6FA4",
+    light: "#E8F4FD",
+    events: [
+      { year: 1804, name: "Morphine isolated", category: "Opiates", desc: "Sertürner isolates morphine from opium — first active alkaloid." },
+      { year: 1857, name: "Potassium bromide", category: "Antiepileptics", desc: "Sir Charles Locock reports potassium bromide suppresses catamenial epilepsy — the first effective antiepileptic drug. Acts by hyperpolarising neuronal membranes via chloride channel substitution. Widely used through the late 19th century despite significant toxicity (bromism: cognitive dulling, dermatitis, psychosis). Precedes phenobarbital by 55 years." },
+      { year: 1884, name: "Cocaine (clinical)", category: "Stimulants", desc: "Freud's Über Coca; Koller demonstrates cocaine as local anesthetic." },
+      { year: 1898, name: "Heroin synthesized", category: "Opiates", desc: "Bayer markets diacetylmorphine as 'Heroin'." },
+      { year: 1912, name: "Phenobarbital", category: "Antiepileptics", desc: "First barbiturate in clinical use for epilepsy and sedation. Completes the early antiepileptic sequence: bromide (1857) → phenobarbital (1912)." },
+      { year: 1920, name: "US Prohibition (18th Amendment)", category: "Alcohol", desc: "The United States bans manufacture and sale of alcohol 1920–1933. Generates the first large-scale natural experiment in population-level alcohol restriction, shapes early addiction medicine, and sharpens understanding of withdrawal (delirium tremens, seizures)." },
+      { year: 1921, name: "Wilder: ketogenic diet", category: "Metabolic Psychiatry", desc: "Russell Wilder at the Mayo Clinic introduces the ketogenic diet — high fat, very low carbohydrate — for drug-resistant epilepsy, mimicking the metabolic state of fasting by inducing ketosis. Remains evidence-based for refractory epilepsy. Now the foundational reference point for metabolic psychiatry: the same diet is being trialled in early RCTs for bipolar disorder and schizophrenia, with proposed mechanisms involving mitochondrial function, neuroinflammation, and metabolic flexibility." },
+      { year: 1935, name: "Alcoholics Anonymous founded", category: "Alcohol", desc: "Bill Wilson and Dr Bob Smith found AA — the first structured peer-support model for alcohol dependence. The 12-step model becomes the most widely used recovery framework in the world." },
+      { year: 1937, name: "Amphetamine (Benzedrine)", category: "Stimulants", desc: "Marketed for narcolepsy, obesity, and later ADHD." },
+      { year: 1938, name: "Phenytoin (Dilantin)", category: "Antiepileptics", desc: "Merritt and Putnam at Harvard identify phenytoin — the first non-sedating antiepileptic drug. Unlike phenobarbital and bromide, it controls seizures without significant sedation. Establishes targeted anticonvulsant pharmacology; remained first-line for 50 years. Completes the early antiepileptic triad: bromide (1857) → phenobarbital (1912) → phenytoin (1938)." },
+      { year: 1938, name: "LSD-25 synthesized", category: "Psychedelics", desc: "Albert Hofmann at Sandoz; psychoactive properties discovered 1943." },
+      { year: 1947, name: "Methadone synthesized", category: "Opiates", desc: "Synthetic opioid developed in Germany during WWII; later used for pain and opioid maintenance treatment." },
+      { year: 1948, name: "Disulfiram (Antabuse)", category: "Alcohol", desc: "Hald and Jacobsen at Medicinalco discover disulfiram's aversive properties accidentally while testing it as an anthelmintic. Approved as first pharmacological treatment for alcohol dependence. Inhibits aldehyde dehydrogenase, causing acetaldehyde accumulation when alcohol is consumed — producing flushing, nausea, tachycardia, and hypotension. First attempt to use pharmacology to modify addictive behaviour." },
+      { year: 1949, name: "Lithium — Cade's discovery", category: "Mood Stabilizers", desc: "John Cade (Australia) discovers lithium carbonate for mania — the first true mood stabilizer. Mogens Schou runs the first controlled trials in the 1950s and drives adoption across Scandinavia and Europe through the 1960s. 🇪🇺 EU/AU: clinical use from ~1960s. 🇺🇸 US: FDA approval delayed until 1970 — a 21-year gap, largely because lithium is a naturally occurring salt that cannot be patented, removing commercial incentive. The canonical example of how patent economics shape treatment access." },
+      { year: 1952, name: "Chlorpromazine", category: "Antipsychotics 1G", desc: "Delay & Deniker introduce chlorpromazine — launched the psychopharmacological revolution." },
+      { year: 1954, name: "Haloperidol (Haldol)", category: "Antipsychotics 1G", desc: "High-potency FGA by Paul Janssen." },
+      { year: 1954, name: "Methylphenidate (Ritalin)", category: "Stimulants", desc: "Becomes mainstay of ADHD treatment." },
+      { year: 1957, name: "Imipramine (Tofranil)", category: "TCAs", desc: "Kuhn discovers first tricyclic antidepressant." },
+      { year: 1958, name: "Iproniazid (first MAOI)", category: "MAOIs", desc: "Anti-TB drug; Kline identifies antidepressant properties." },
+      { year: 1960, name: "Chlordiazepoxide (Librium)", category: "Benzodiazepines", desc: "Sternbach at Roche — the first benzodiazepine." },
+      { year: 1963, name: "Diazepam (Valium)", category: "Benzodiazepines", desc: "Best-selling drug in the world 1968–1982." },
+      { year: 1964, name: "Clomipramine", category: "TCAs", desc: "First drug proven effective for OCD." },
+      { year: 1964, name: "Dole & Nyswander: methadone maintenance", category: "Opioid Substitution", desc: "Vincent Dole and Marie Nyswander at Rockefeller University publish the foundational paper on methadone maintenance treatment — demonstrating that daily oral methadone stabilises patients with heroin dependence, eliminates craving, and allows social rehabilitation. A revolutionary paradigm shift from moral/abstinence frameworks to a medical substitution model. Dole proposes a metabolic disease model of addiction, anticipating the neurobiological understanding of dependence. MMT remains the most evidence-based treatment for opioid dependence." },
+      { year: 1967, name: "Sodium valproate", category: "Mood Stabilizers", desc: "First shown to have anticonvulsant properties; later key mood stabilizer for bipolar disorder and mania. Significant teratogenicity risks." },
+      { year: 1970, name: "Lithium: FDA approval (USA)", category: "Mood Stabilizers", desc: "Lithium finally receives FDA approval — 21 years after Cade's 1949 discovery and a decade after it became standard care across Scandinavia, the UK, and much of Europe. Driven by Mogens Schou's persistent advocacy rather than commercial pressure. Remains the most impactful example of how patent economics shape treatment availability." },
+      { year: 1974, name: "Clonidine", category: "Alpha-2 Agonists", desc: "Alpha-2 adrenergic agonist originally developed for hypertension (approved 1966 in Germany). Enters psychiatric use as a key agent in opioid withdrawal management — suppresses the noradrenergic hyperactivity (sweating, tachycardia, anxiety, restlessness) of withdrawal by reducing locus coeruleus firing. Also used off-label for PTSD hyperarousal, ADHD, Tourette's, and alcohol withdrawal. Precursor to guanfacine ER, which offers a more selective prefrontal cortex profile with fewer cardiovascular side effects." },
+      { year: 1975, name: "Clozapine (Europe)", category: "Antipsychotics 2G", desc: "First atypical antipsychotic; withdrawn 1975 due to agranulocytosis, reintroduced 1989. Gold standard for treatment-resistant schizophrenia." },
+      { year: 1976, name: "Dexamphetamine (Dexedrine)", category: "Stimulants", desc: "The dextrorotatory isomer of amphetamine — available clinically since the 1940s but formalised as Dexedrine for ADHD and narcolepsy through successive approvals (FDA ADHD indication formalised through 1970s–76). Approximately twice as potent as the levorotatory form with a cleaner CNS profile and lower peripheral side effects than racemic amphetamine. Acts primarily by increasing synaptic dopamine and norepinephrine via reverse transport. In Scandinavia, dexamphetamine remains a commonly used second-line ADHD agent when methylphenidate is insufficient or poorly tolerated." },
+      { year: 1981, name: "Trazodone", category: "SARIs", desc: "Serotonin antagonist/reuptake inhibitor for depression and insomnia." },
+      { year: 1984, name: "Naltrexone for opioid dependence", category: "Opioid Substitution", desc: "Naltrexone, a full opioid antagonist, FDA-approved for prevention of relapse in detoxified opioid-dependent patients. Blocks all opioid receptors, eliminating euphoric effect of heroin. Adherence is the fundamental limitation — patients must be fully detoxified and must take it daily. Later reformulated as extended-release injectable (Vivitrol, 2010) to address adherence." },
+      { year: 1985, name: "Bupropion (Wellbutrin)", category: "NDRIs", desc: "Norepinephrine-dopamine reuptake inhibitor; used for depression, ADHD, and smoking cessation. No sexual side effects." },
+      { year: 1986, name: "Buspirone (Buspar)", category: "Azapirones", desc: "First non-benzodiazepine anxiolytic; partial 5-HT1A agonist. No dependence, no sedation, but slow onset (2–4 weeks)." },
+      { year: 1987, name: "Fluoxetine (Prozac)", category: "SSRIs", desc: "First SSRI — cultural landmark, transformed psychiatry." },
+      { year: 1990, name: "Moclobemide (Aurorix)", category: "MAOIs", desc: "Reversible inhibitor of monoamine oxidase A (RIMA) — a major advance over irreversible MAOIs. Does not require a strict tyramine-free diet because inhibition is reversible and dietary tyramine can displace it. 🇨🇭 Switzerland: first approved 1990; 🇪🇺 EU/AU/CA: widely available. 🇺🇸 US: never submitted for FDA approval — commercially unattractive given SSRI dominance. Represents a significant pharmacological option unavailable to American patients by market decision rather than safety or efficacy concerns." },
+      { year: 1991, name: "Sertraline (Zoloft)", category: "SSRIs", desc: "Broad spectrum: depression, anxiety, PTSD, OCD." },
+      { year: 1992, name: "Paroxetine (Paxil/Seroxat)", category: "SSRIs", desc: "Potent SSRI with strong muscarinic antagonism. Notable discontinuation syndrome; widely used for panic, social anxiety, and PTSD." },
+      { year: 1993, name: "Risperidone", category: "Antipsychotics 2G", desc: "First SGA after clozapine; less EPS but metabolic and prolactin issues." },
+      { year: 1993, name: "Venlafaxine (Effexor)", category: "SNRIs", desc: "First SNRI — dual serotonin/norepinephrine reuptake inhibition." },
+      { year: 1993, name: "Gabapentin (Neurontin)", category: "Gabapentinoids", desc: "Alpha-2-delta calcium channel ligand; approved for epilepsy and neuropathic pain. Widely used off-label for anxiety, alcohol withdrawal, and insomnia. Growing concern about misuse and dependence." },
+      { year: 1994, name: "Olanzapine (Zyprexa)", category: "Antipsychotics 2G", desc: "Effective but significant metabolic side effects." },
+      { year: 1994, name: "Mirtazapine (Remeron)", category: "NaSSAs", desc: "Noradrenergic and specific serotonergic antidepressant; sedating, appetite-stimulating." },
+      { year: 1994, name: "Lamotrigine (Lamictal)", category: "Mood Stabilizers", desc: "Particularly effective for bipolar depression and bipolar II. Slow titration required due to risk of Stevens-Johnson syndrome." },
+      { year: 1994, name: "Naltrexone for alcohol dependence", category: "Alcohol", desc: "Approved for alcohol dependence — reduces craving and relapse by blocking opioid-mediated reward of alcohol. Reframes addiction as neurobiology rather than moral failing." },
+      { year: 1996, name: "Quetiapine (Seroquel)", category: "Antipsychotics 2G", desc: "Widely used in psychosis, bipolar, and off-label for anxiety/insomnia." },
+      { year: 1996, name: "OxyContin (oxycodone ER) launched", category: "Opioid Substitution", desc: "Purdue Pharma launches OxyContin with misleading claims about low addiction potential. Its widespread prescribing initiates the modern opioid epidemic. Deaths from opioid overdose rise exponentially, later compounded by illicit fentanyl. Leads to thousands of lawsuits and a $6 billion settlement — one of the most catastrophic events in pharmaceutical history." },
+      { year: 1997, name: "Reboxetine (Edronax)", category: "NARIs", desc: "Selective norepinephrine reuptake inhibitor approved across Europe. 🇪🇺 EU: approved 1997. 🇺🇸 US: FDA rejected — a 2010 re-analysis found the published literature substantially overstated efficacy due to unpublished negative trials. One of the most prominent cases of publication bias in psychiatry; directly influenced the movement for mandatory clinical trial registration." },
+      { year: 2002, name: "Buprenorphine/naloxone (Suboxone)", category: "Opioid Substitution", desc: "US DATA 2000 Act permits office-based buprenorphine prescribing. 🇫🇷 France: buprenorphine (Subutex) already available since 1996, with liberal prescribing dramatically reducing heroin overdose deaths — a natural experiment largely ignored by US policymakers for six years. Partial mu-opioid agonist; ceiling effect on respiratory depression makes it substantially safer in overdose than methadone. Transforms opioid treatment by enabling primary care prescribing." },
+      { year: 2002, name: "Aripiprazole (Abilify)", category: "Antipsychotics 2G", desc: "First dopamine partial agonist (3rd generation); better metabolic profile." },
+      { year: 2003, name: "Atomoxetine (Strattera)", category: "Non-stimulant ADHD", desc: "First non-stimulant approved for ADHD; selective norepinephrine reuptake inhibitor." },
+      { year: 2004, name: "Duloxetine (Cymbalta)", category: "SNRIs", desc: "SNRI for depression, GAD, and neuropathic pain. Also used in fibromyalgia." },
+      { year: 2004, name: "Pregabalin (Lyrica)", category: "Gabapentinoids", desc: "Approved for epilepsy, neuropathic pain, GAD, and fibromyalgia. Controlled substance in many countries due to misuse potential." },
+      { year: 2004, name: "Acamprosate (Campral)", category: "Alcohol", desc: "🇪🇺 EU: available since 1989. 🇺🇸 US: FDA approved 2004. Modulates glutamatergic and GABAergic transmission — reduces the hyperexcitable state driving post-withdrawal craving. Complements naltrexone: naltrexone targets reward, acamprosate targets neuroadaptive withdrawal changes." },
+      { year: 2004, name: "FDA: metabolic syndrome warnings for SGAs", category: "Metabolic Psychiatry", desc: "FDA issues class warnings requiring all SGAs to carry labelling about hyperglycaemia, diabetes, dyslipidaemia, and weight gain. Forces systematic metabolic monitoring into psychiatric practice. Catalyses metabolic monitoring protocols (CATIE trial 2005) and highlights the tension between psychiatric efficacy and cardiometabolic harm." },
+      { year: 2007, name: "Lisdexamfetamine (Vyvanse/Elvanse)", category: "Stimulants", desc: "Prodrug of dexamphetamine covalently bound to lysine — enzymatic cleavage releases d-amphetamine gradually, giving smoother onset, longer duration (10–14 hours), and lower abuse potential. One of the most prescribed ADHD medications in Sweden (as Elvanse). Also approved for binge eating disorder in the USA." },
+      { year: 2009, name: "Agomelatine (Valdoxan)", category: "Melatonergic", desc: "Melatonin receptor agonist (MT1/MT2) and 5-HT2C antagonist — acts on circadian rhythm regulation. No sexual side effects, no discontinuation syndrome, improves sleep architecture. Requires liver function monitoring. 🇪🇺 EU: EMA-approved 2009, widely used in Sweden and Europe. 🇺🇸 US: FDA rejected twice — insufficient efficacy by FDA standards despite EMA approval." },
+      { year: 2009, name: "Guanfacine ER (Intuniv)", category: "Non-stimulant ADHD", desc: "Alpha-2A adrenergic agonist for ADHD. Also used off-label for PTSD hyperarousal, aggression, and tic disorders. Modulates prefrontal cortex function more selectively than clonidine." },
+      { year: 2010, name: "Extended-release naltrexone (Vivitrol)", category: "Opioid Substitution", desc: "Monthly intramuscular naltrexone injection — addresses the fundamental adherence problem of daily oral naltrexone. Provides 30 days of opioid receptor blockade from a single injection. Particularly useful in criminal justice settings and post-detoxification discharge. Completes the pharmacological toolkit: methadone (full agonist), buprenorphine (partial agonist), naltrexone (antagonist)." },
+      { year: 2018, name: "Psilocybin: Breakthrough Therapy", category: "Psychedelics", desc: "FDA grants psilocybin Breakthrough Therapy designation for treatment-resistant depression — marks the beginning of the clinical psychedelic renaissance after decades of prohibition. Phase II trials by Imperial College London and Johns Hopkins show rapid, sustained antidepressant effects after 1–2 supervised sessions. Proposed mechanism: 5-HT2A agonism producing neuroplasticity and default mode network disruption. MDMA for PTSD receives Breakthrough designation in the same era." },
+      { year: 2019, name: "Esketamine (Spravato)", category: "Glutamatergic", desc: "FDA-approved intranasal ketamine for treatment-resistant depression — breakthrough glutamatergic mechanism." },
+      { year: 2019, name: "Brexanolone (Zulresso)", category: "Neurosteroids", desc: "First drug specifically approved for postpartum depression; IV synthetic allopregnanolone." },
+      { year: 2023, name: "Zuranolone", category: "Neurosteroids", desc: "First oral neurosteroid for depression; acts on GABA-A receptors." },
+      { year: 2023, name: "GLP-1 agonists and psychiatry", category: "Metabolic Psychiatry", desc: "Emerging signals from large pharmacovigilance datasets and early trials suggest GLP-1 receptor agonists (semaglutide/Ozempic, tirzepatide) may have neuropsychiatric effects beyond weight loss — reduced alcohol and opioid craving, possible antidepressant properties, reduced impulsivity. GLP-1 receptors are expressed in limbic and reward circuits. Also being investigated to address antipsychotic-induced metabolic syndrome. RCTs ongoing." },
+      { year: 2024, name: "Cobenfy (xanomeline-trospium)", category: "Antipsychotics — Muscarinic", desc: "First antipsychotic with a purely muscarinic mechanism (M1/M4 agonist) — no D2 blockade. First genuinely new antipsychotic mechanism in 70 years, avoiding EPS and metabolic side effects of dopamine-blocking agents." },
+    ]
+  },
+  psychiatry: {
+    label: "Psychiatry & Neuroscience",
+    icon: "🧠",
+    accent: "#B91C1C",
+    light: "#FEE2E2",
+    events: [
+      { year: 1793, name: "Pinel unchains patients", category: "Moral Treatment", desc: "Pinel removes chains at Bicêtre — founding act of humanitarian psychiatry." },
+      { year: 1817, name: "Parkinson: 'Shaking Palsy'", category: "Neurology", desc: "James Parkinson's 'Essay on the Shaking Palsy' — first systematic description of what becomes Parkinson's disease. Charcot later names it after him." },
+      { year: 1844, name: "APA founded", category: "Institution", desc: "Association of Medical Superintendents — later becomes APA." },
+      { year: 1848, name: "Phineas Gage", category: "Neuroscience", desc: "Tamping iron destroys Gage's frontal lobe; survives but personality changes profoundly. Foundational case for frontal lobe's role in personality and social behaviour." },
+      { year: 1857, name: "Locock: bromide for epilepsy", category: "Epilepsy", desc: "Sir Charles Locock reports potassium bromide suppresses catamenial epilepsy — marks the beginning of the pharmacological approach to epilepsy." },
+      { year: 1861, name: "Broca's area", category: "Neuroscience", desc: "Broca localizes expressive language to left frontal gyrus." },
+      { year: 1861, name: "Hughlings Jackson: focal epilepsy", category: "Epilepsy", desc: "John Hughlings Jackson describes focal seizures and proposes epilepsy results from abnormal cortical electrical discharges. His hierarchical model of nervous system organisation becomes foundational for both neurology and neuropsychiatry. Focal seizures march across the body in anatomically predictable order — anticipating Penfield's cortical mapping by 90 years." },
+      { year: 1872, name: "Huntington's chorea described", category: "Neurology", desc: "George Huntington's landmark paper describing hereditary chorea with psychiatric features, personality change, and dementia. Autosomal dominant inheritance explicitly noted — remarkable for the era." },
+      { year: 1872, name: "Westphal: Agoraphobia", category: "Nosology", desc: "First clinical description of agoraphobia." },
+      { year: 1874, name: "Wernicke's area", category: "Neuroscience", desc: "Wernicke identifies receptive language area in temporal lobe." },
+      { year: 1878, name: "Charcot's hysteria lectures", category: "Neurology", desc: "Charcot at Salpêtrière; young Freud attends 1885." },
+      { year: 1881, name: "Wernicke's encephalopathy", category: "Wernicke-Korsakoff", desc: "Carl Wernicke describes the acute neuropsychiatric triad of ophthalmoplegia, cerebellar ataxia, and confusion. A medical emergency still frequently missed in clinical practice. Caused by thiamine deficiency — classically associated with alcohol dependence but occurs in any cause of thiamine depletion: prolonged vomiting, malnutrition, eating disorders, post-bariatric surgery." },
+      { year: 1883, name: "Kraepelin's classification", category: "Nosology", desc: "Distinguishes dementia praecox from manic-depressive insanity." },
+      { year: 1887, name: "Korsakoff's amnestic syndrome", category: "Wernicke-Korsakoff", desc: "Sergei Korsakoff describes a chronic amnestic syndrome following the acute phase: profound anterograde amnesia, relatively preserved remote memory, and confabulation — unconscious fabrication of plausible but false memories. Wernicke-Korsakoff is now understood as a spectrum: Wernicke's encephalopathy is the acute phase, Korsakoff syndrome the chronic residual, both caused by thiamine deficiency." },
+      { year: 1906, name: "Alzheimer describes dementia", category: "Neuroscience", desc: "First case of presenile dementia with plaques and tangles." },
+      { year: 1906, name: "Cajal & Golgi: Nobel", category: "Neuroscience", desc: "Neuron doctrine vs reticular theory — cellular basis of nervous system established." },
+      { year: 1908, name: "Bleuler: 'schizophrenia'", category: "Nosology", desc: "Replaces 'dementia praecox'; introduces the Four A's." },
+      { year: 1913, name: "Jaspers: General Psychopathology", category: "Phenomenological Psychiatry", desc: "Karl Jaspers publishes Allgemeine Psychopathologie — the foundational text of descriptive and phenomenological psychiatry. Introduces the crucial distinction between Verstehen (empathic understanding of meaningful psychological connections) and Erklären (causal explanation of brain processes) — still the deepest methodological tension in psychiatry. Develops form vs content of symptoms: it is the form (how the patient experiences) rather than content (what they believe) that is diagnostically meaningful. Introduces un-understandability (Unverständlichkeit) as a defining feature of schizophrenic experience. Foundational for the mental state examination, ICD phenomenological criteria, and all descriptive psychopathology." },
+      { year: 1917, name: "Wagner-Jauregg: malaria therapy", category: "Treatment", desc: "Fever therapy for neurosyphilis — first psychiatric Nobel 1927." },
+      { year: 1929, name: "Berger: EEG", category: "Neuroscience", desc: "First human EEG recorded — opens neurophysiology to psychiatry." },
+      { year: 1933, name: "Sakel: insulin coma therapy", category: "Treatment", desc: "Manfred Sakel introduces insulin coma therapy for schizophrenia in Vienna — patients induced into repeated hypoglycaemic comas. Widely adopted across Europe and North America through the 1940s–50s, then abandoned after controlled trials showed no benefit over rest alone. Part of the same somatic treatment era as leucotomy and ECT — illustrates desperate search for biological treatments before antipsychotics existed." },
+      { year: 1935, name: "Moniz: leucotomy", category: "Treatment", desc: "First lobotomy — Nobel 1949, later widely condemned." },
+      { year: 1937, name: "Thiamine deficiency: Wernicke-Korsakoff", category: "Wernicke-Korsakoff", desc: "Peters and colleagues confirm thiamine (vitamin B1) deficiency as the unifying cause of both Wernicke's encephalopathy and Korsakoff's amnestic syndrome — connecting the two syndromes described 50 years apart. Establishes that a nutritional deficiency can produce both an acute neuropsychiatric emergency and a permanent amnestic disorder." },
+      { year: 1938, name: "Cerletti & Bini: ECT", category: "Treatment", desc: "Electroconvulsive therapy introduced in Rome. Remains effective for severe depression and catatonia." },
+      { year: 1943, name: "Kanner describes autism", category: "Autism & Neurodevelopment", desc: "Leo Kanner at Johns Hopkins describes 11 children with 'autistic disturbances of affective contact' — founding paper on autism." },
+      { year: 1944, name: "Asperger's syndrome described", category: "Autism & Neurodevelopment", desc: "Hans Asperger describes 'autistic psychopathy' in Viennese children. Published in German during WWII; largely unknown outside Austria for decades." },
+      { year: 1948, name: "ICD-6: mental disorders chapter", category: "Classification", desc: "WHO's ICD-6 is the first to include a dedicated mental disorders chapter — predating DSM-I by four years. ICD becomes the primary classification system outside the United States, including across Europe and Scandinavia. The long parallel development of ICD and DSM creates decades of diagnostic inconsistency only partially resolved by cross-walking between editions." },
+      { year: 1952, name: "DSM-I published", category: "Classification", desc: "First DSM — influenced by WWII psychiatry and psychodynamic theory." },
+      { year: 1954, name: "Penfield: cortical mapping", category: "Epilepsy", desc: "Wilder Penfield at the Montreal Neurological Institute maps the human cortex during epilepsy neurosurgery, stimulating exposed brain while patients are awake. Creates the sensory and motor homunculi. Crucially, temporal lobe stimulation elicits vivid autobiographical memories, emotions, and déjà vu — directly linking epilepsy to memory, identity, and psychiatric symptoms." },
+      { year: 1957, name: "Serotonin hypothesis of depression", category: "Neuroscience", desc: "Schildkraut & Carlsson link monoamine deficiency to depression — dominant theory for 50+ years." },
+      { year: 1958, name: "Carlsson: dopamine as neurotransmitter", category: "Neuroscience", desc: "Arvid Carlsson demonstrates dopamine is an independent neurotransmitter and that its depletion causes Parkinson-like symptoms. Directly leads to both L-DOPA treatment of Parkinson's and the dopamine hypothesis of schizophrenia. Nobel 2000." },
+      { year: 1963, name: "Deinstitutionalisation begins", category: "Social Psychiatry", desc: "The US Community Mental Health Act (1963) under President Kennedy funds community mental health centres and initiates the systematic closure of large psychiatric institutions. Deinstitutionalisation sweeps across North America and Europe through the 1960s–80s — driven by the combination of antipsychotic medication (making community living feasible), civil liberties movements, and economic pressure to close expensive hospitals. In theory: humane, recovery-oriented care in the community. In practice: in many countries, inadequate community infrastructure led to homelessness, imprisonment, and revolving-door admissions. One of the most consequential and contested policy shifts in psychiatric history, whose consequences — both positive and negative — are still being reckoned with." },
+      { year: 1968, name: "DSM-II published", category: "Classification", desc: "Retained psychoanalytic framing; listed homosexuality as disorder." },
+      { year: 1968, name: "Kety: adoption studies of schizophrenia", category: "Psychiatric Genetics", desc: "Seymour Kety's Danish adoption studies provide the first rigorous evidence that schizophrenia has a strong genetic component independent of environment — the foundation of the genetic approach to psychiatric illness." },
+      { year: 1972, name: "Gottesman & Shields: twin studies", category: "Psychiatric Genetics", desc: "Establish schizophrenia heritability at ~80% — concordance ~48% in identical twins vs ~17% in fraternal. Demonstrates major genetic contribution while confirming environment also plays a role." },
+      { year: 1973, name: "Homosexuality removed", category: "Classification", desc: "APA removes homosexuality from DSM — paradigm shift." },
+      { year: 1975, name: "Temporal lobe epilepsy & psychosis", category: "Epilepsy", desc: "The concept of interictal psychosis of epilepsy is formalised — a schizophrenia-like psychosis occurring between seizures in temporal lobe epilepsy. Flor-Henry and others document the psychiatric syndrome including Geschwind syndrome (hypergraphia, hypersexuality, religiosity, viscosity). Sharpens understanding of the relationship between focal brain pathology and psychosis." },
+      { year: 1977, name: "Engel: biopsychosocial model", category: "Theoretical Frameworks", desc: "George Engel publishes 'The Need for a New Medical Model: A Challenge for Biomedicine' in Science — proposing the biopsychosocial model as a replacement for the dominant biomedical model. Argues that biological factors alone cannot explain illness, health, or treatment response; psychological and social dimensions are equally causal, not merely reactive. The biopsychosocial model becomes the explicit theoretical framework underlying psychiatric training, formulation, and practice worldwide. Despite its ubiquity in training, its translation into clinical practice remains incomplete — and its philosophical coherence has been challenged, but no widely accepted alternative has replaced it." },
+      { year: 1977, name: "Dopamine hypothesis of schizophrenia", category: "Neuroscience", desc: "Seeman & Snyder: D2 receptor blockade is the mechanism of antipsychotics. Links Carlsson's 1958 work to clinical psychiatry, and connects Parkinson's hypodopaminergia to schizophrenia's hyperdopaminergia." },
+      { year: 1980, name: "DSM-III published", category: "Classification", desc: "Spitzer leads atheoretical, criteria-based classification. Major paradigm shift." },
+      { year: 1980, name: "PTSD enters DSM-III", category: "Nosology", desc: "PTSD formally recognised — driven by Vietnam veterans' advocacy. Transforms understanding of psychological trauma." },
+      { year: 1981, name: "Wing: Asperger's in English", category: "Autism & Neurodevelopment", desc: "Lorna Wing translates Asperger's 1944 paper; introduces the 'autistic spectrum' concept to English-speaking world." },
+      { year: 1985, name: "Barker: transcranial magnetic stimulation", category: "Brain Stimulation", desc: "Anthony Barker at the University of Sheffield develops the first practical transcranial magnetic stimulator — inducing electrical currents in the brain non-invasively using rapidly changing magnetic fields. Initial demonstration: stimulating the motor cortex causes visible hand movement in an awake subject. Opens an entirely new paradigm of non-invasive neuromodulation for both research and therapy." },
+      { year: 1987, name: "Benabid: deep brain stimulation", category: "Brain Stimulation", desc: "Alim-Louis Benabid at Grenoble makes a chance intraoperative observation: high-frequency stimulation of the Vim thalamus suppresses tremor immediately and reversibly. Distinguishes DBS from ablative surgery — stimulation can be adjusted or switched off. Gives rise to modern DBS for Parkinson's, essential tremor, dystonia, and later psychiatric conditions. Benabid receives the Lasker Award 2014." },
+      { year: 1990, name: "Decade of the Brain", category: "Neuroscience", desc: "US Presidential declaration; massive NIH neuroscience investment." },
+      { year: 1991, name: "Fragile X: FMR1 gene identified", category: "Psychiatric Genetics", desc: "FMR1 gene identified; CGG repeat expansion confirmed as cause of Fragile X — the most common inherited cause of intellectual disability and most common single-gene cause of autism. Established trinucleotide repeat expansion as a disease mechanism." },
+      { year: 1992, name: "ICD-10: mental and behavioural disorders", category: "Classification", desc: "The ICD-10 F-chapter becomes the dominant psychiatric classification system outside the United States — used across all of Europe and Scandinavia. The official system Swedish psychiatry operates under. Key differences from DSM-IV: broader schizophrenia concept, different depression thresholds, emotionally unstable personality disorder (vs DSM's borderline PD). The ICD/DSM divergence creates persistent challenges for international research comparability." },
+      { year: 1992, name: "22q11.2 deletion syndrome", category: "Psychiatric Genetics", desc: "The 22q11.2 microdeletion (DiGeorge/velocardiofacial syndrome) is characterised. Confers 20–30× increased risk of schizophrenia — the single strongest known genetic risk factor. Present in ~1 in 4000 live births; ~30% develop psychosis. Also associated with anxiety, ADHD, and autism." },
+      { year: 1993, name: "Huntington's HTT gene identified", category: "Psychiatric Genetics", desc: "HTT gene on chromosome 4 identified; CAG repeat expansion confirmed as cause of Huntington's disease. First neurodegenerative disease mapped to a specific genetic mutation." },
+      { year: 1993, name: "APOE ε4 and Alzheimer's disease", category: "Psychiatric Genetics", desc: "Allen Roses identifies APOE ε4 as the major genetic risk factor for late-onset Alzheimer's disease. One copy confers 3× risk; two copies 8–12×. Shifts Alzheimer's research toward lipid metabolism and amyloid clearance." },
+      { year: 1993, name: "DBS approved for essential tremor", category: "Brain Stimulation", desc: "FDA approves DBS of the Vim thalamus for essential tremor — the first regulatory approval for DBS. Establishes the safety and reversibility profile of DBS as a therapeutic platform and paves the way for subthalamic and pallidal targets in Parkinson's disease." },
+      { year: 1994, name: "DSM-IV published", category: "Classification", desc: "Added cultural formulation; multiaxial system refined." },
+      { year: 1994, name: "Asperger's in DSM-IV", category: "Autism & Neurodevelopment", desc: "Asperger's Disorder formally enters DSM-IV as a distinct diagnosis." },
+      { year: 1995, name: "rTMS: first depression studies", category: "Brain Stimulation", desc: "Alvaro Pascual-Leone and colleagues publish the first controlled studies showing rTMS of the left dorsolateral prefrontal cortex (DLPFC) produces antidepressant effects. Establishes the cortical lateralisation hypothesis of depression. The left DLPFC target remains standard to this day." },
+      { year: 1997, name: "DBS approved for Parkinson's disease", category: "Brain Stimulation", desc: "FDA approves DBS of the subthalamic nucleus (STN) and globus pallidus interna (GPi) for Parkinson's disease. STN-DBS dramatically reduces motor fluctuations, dyskinesia, and off-time. Over 200,000 patients globally have received DBS for movement disorders by 2020." },
+      { year: 1999, name: "MECP2 gene and Rett syndrome", category: "Psychiatric Genetics", desc: "MECP2 mutations identified as cause of Rett syndrome — first neurodevelopmental disorder traced to an epigenetic regulatory gene, opening epigenetics in psychiatry." },
+      { year: 1999, name: "Nuttin: DBS for OCD", category: "Brain Stimulation", desc: "Bart Nuttin and colleagues at KU Leuven publish the first case series of DBS for severe, treatment-refractory OCD in the Lancet — targeting the anterior limb of the internal capsule (ALIC). Three of four patients showed meaningful reduction in OCD severity. Establishes psychiatric DBS as a field, preceding Mayberg's depression work by six years." },
+      { year: 2000, name: "DISC1: schizophrenia candidate gene", category: "Psychiatric Genetics", desc: "Disrupted in Schizophrenia 1 (DISC1) identified in a Scottish family with chromosomal translocation and high rates of major mental illness. Drove 15 years of molecular psychiatry research." },
+      { year: 2000, name: "Carlsson: Nobel Prize", category: "Neuroscience", desc: "Arvid Carlsson receives Nobel Prize (with Greengard & Kandel) for dopamine signalling discoveries — validating 40 years of neuropharmacology." },
+      { year: 2000, name: "fMRI widespread", category: "Neuroscience", desc: "Functional brain imaging becomes standard in psychiatric research." },
+      { year: 2005, name: "Mayberg: DBS for depression", category: "Brain Stimulation", desc: "Helen Mayberg at the University of Toronto publishes the landmark paper in Neuron on DBS targeting the subgenual anterior cingulate cortex (Area 25) in treatment-resistant depression. Area 25 is a key node in the limbic-cortical circuit overactive in depression. Four of six patients showed dramatic, sustained remission — the first time DBS was used for a primary psychiatric indication." },
+      { year: 2007, name: "Dalmau: anti-NMDA encephalitis", category: "Autoimmune Psychiatry", desc: "Josep Dalmau identifies anti-NMDA receptor encephalitis — establishing autoimmune encephalitis as a cause of acute psychosis and catatonia previously misdiagnosed as primary psychiatric illness. Changed psychiatric evaluation permanently." },
+      { year: 2007, name: "Copy number variants (CNVs) in autism", category: "Psychiatric Genetics", desc: "Multiple groups identify rare de novo CNVs as a significant cause of ASD. Reveals that autism is genetically heterogeneous, with hundreds of rare variants each contributing small numbers of cases. Opens the structural genomics era in psychiatry." },
+      { year: 2008, name: "rTMS: FDA approval for depression", category: "Brain Stimulation", desc: "FDA approves NeuroStar TMS for treatment-resistant major depression — the first regulatory approval of rTMS for a psychiatric indication. Subsequently theta burst stimulation (iTBS) protocols approved for faster delivery (3 minutes vs 37 minutes), and deep TMS (H-coil) approved for OCD (2018) and smoking cessation." },
+      { year: 2009, name: "Psychiatric Genomics Consortium founded", category: "Psychiatric Genetics", desc: "The PGC pools GWAS data across psychiatric disorders internationally — the largest collaboration in psychiatry, analysing hundreds of thousands of cases across schizophrenia, bipolar, depression, ADHD, and autism." },
+      { year: 2009, name: "DBS approved for OCD (FDA HDE)", category: "Brain Stimulation", desc: "FDA grants a Humanitarian Device Exemption for DBS targeting the ALIC / ventral striatum for severe, treatment-refractory OCD — the first FDA approval of DBS for a primary psychiatric disorder." },
+      { year: 2010, name: "RDoC launched (NIMH)", category: "Classification", desc: "Thomas Insel at NIMH launches the Research Domain Criteria (RDoC) — an explicit challenge to DSM's symptom-based categories. RDoC organises psychopathology by underlying neural circuits across five domains: negative valence, positive valence, cognitive systems, social processes, and arousal/regulation. Core argument: DSM categories do not map onto biological systems. Hugely influential in research funding and design even though RDoC is not a clinical classification." },
+      { year: 2013, name: "DSM-5: Autism Spectrum Disorder", category: "Autism & Neurodevelopment", desc: "DSM-5 merges autism, Asperger's, and PDD-NOS into a single ASD category. Asperger's as a separate diagnosis is retired." },
+      { year: 2013, name: "DSM-5 published", category: "Classification", desc: "Eliminated multiaxial system; dimensional specifiers; spectrum approach." },
+      { year: 2013, name: "BRAIN Initiative", category: "Neuroscience", desc: "$100M+ US effort to map brain activity at cellular resolution." },
+      { year: 2014, name: "Schizophrenia GWAS: 108 loci", category: "Psychiatric Genetics", desc: "PGC identifies 108 independent loci associated with schizophrenia — the largest genetic discovery in psychiatric history at the time. Implicates dopaminergic, glutamatergic, and immune pathways. Demonstrates highly polygenic architecture." },
+      { year: 2017, name: "HiTOP published", category: "Classification", desc: "The Hierarchical Taxonomy of Psychopathology (HiTOP) consortium publishes its foundational framework — an empirically-derived, dimensional alternative to DSM and ICD. Uses factor-analytic data to organise psychopathology hierarchically: from broad spectra (internalising, externalising, thought disorder) down to narrow symptom dimensions. Eliminates arbitrary categorical boundaries and captures comorbidity naturally. Gaining traction in research and clinical psychology training." },
+      { year: 2019, name: "Autism GWAS: first common variant signals", category: "Psychiatric Genetics", desc: "First large-scale ASD GWAS identifies robust common variant associations. Confirms genetic overlap with schizophrenia, bipolar disorder, and educational attainment — challenging categorical diagnostic boundaries with molecular evidence." },
+      { year: 2022, name: "DSM-5-TR published", category: "Classification", desc: "Text revision; added prolonged grief disorder; updated suicide language." },
+      { year: 2022, name: "ICD-11 comes into effect", category: "Classification", desc: "ICD-11 officially comes into effect globally. Key psychiatric changes: complex PTSD introduced as a distinct diagnosis; personality disorders chapter restructured around dimensional severity (mild, moderate, severe) plus five trait domain qualifiers (negative affectivity, detachment, dissociality, disinhibition, anankastia) — eliminating most categorical PD types; gaming disorder added. Sweden and other WHO member states transitioning from ICD-10." },
+    ]
+  },
+  psychotherapy: {
+    label: "Psychotherapy",
+    icon: "🗣️",
+    accent: "#6D28D9",
+    light: "#EDE9FE",
+    events: [
+      { year: 1880, name: "Breuer treats 'Anna O'", category: "Psychoanalysis", desc: "First talking cure — cathartic method with Bertha Pappenheim." },
+      { year: 1897, name: "Pavlov: conditioned reflexes", category: "Behaviourism — Origins", desc: "Ivan Pavlov, studying canine digestion, discovers that neutral stimuli reliably paired with food come to elicit salivation on their own — classical (Pavlovian) conditioning. Nobel Prize 1904 for physiology. Pavlov never considered himself a psychologist, but his work becomes the scientific foundation of all behavioural psychology and directly inspires Watson, Wolpe, and CBT's exposure principles. The most influential experimental finding in the history of learning theory." },
+      { year: 1900, name: "Interpretation of Dreams", category: "Psychoanalysis", desc: "Freud establishes unconscious, dream work, wish fulfilment." },
+      { year: 1913, name: "Watson: behaviourist manifesto", category: "Behaviourism", desc: "John B. Watson's 'Psychology as the Behaviourist Views It' — founding manifesto of behaviourism. Rejects introspection and consciousness as scientific objects; declares psychology must study only observable behaviour. A direct rebuke of both psychoanalysis and structuralism. Sets the agenda for American academic psychology for 40 years." },
+      { year: 1913, name: "Jung breaks with Freud", category: "Analytical Psychology", desc: "Archetypes, collective unconscious, individuation." },
+      { year: 1920, name: "Watson & Rayner: Little Albert", category: "Behaviourism", desc: "Watson and Rosalie Rayner condition fear of a white rat in an infant using classical conditioning — demonstrating that emotional responses can be acquired through learning. Direct empirical challenge to psychoanalytic theories of symptom formation. Foundation of exposure-based treatments." },
+      { year: 1920, name: "Beyond the Pleasure Principle", category: "Psychoanalysis", desc: "Death drive (Thanatos), repetition compulsion." },
+      { year: 1923, name: "The Ego and the Id", category: "Psychoanalysis", desc: "Structural model: id, ego, superego." },
+      { year: 1932, name: "Adler: Individual Psychology", category: "Individual Psychology", desc: "Inferiority complex, social interest, birth order." },
+      { year: 1938, name: "Skinner: The Behaviour of Organisms", category: "Behaviourism", desc: "B.F. Skinner formalises operant conditioning — behaviour shaped by its consequences (reinforcement and punishment). Introduces schedules of reinforcement, shaping, and extinction. Foundation of applied behaviour analysis (ABA), token economies, and behavioural activation." },
+      { year: 1942, name: "Rogers: Client-Centered Therapy", category: "Humanistic", desc: "Unconditional positive regard, empathy, congruence." },
+      { year: 1946, name: "Frankl: Logotherapy", category: "Existential", desc: "Viktor Frankl publishes Man's Search for Meaning (original German: Ein Psychologe erlebt das Konzentrationslager) — drawing on his experience in Nazi concentration camps to develop Logotherapy, a meaning-centred psychotherapy. The foundational proposition: the primary human drive is not pleasure (Freud) or power (Adler) but the search for meaning. When meaning is found, suffering becomes bearable; when it cannot be found, existential vacuum and noogenic neurosis result. Three main avenues to meaning: creative values (what we give to the world), experiential values (what we receive — love, beauty, truth), and attitudinal values (the stance we take toward unavoidable suffering). Particularly influential in palliative and oncology psychiatry, existential group therapy, and the broader positive psychology movement." },
+      { year: 1946, name: "Klein: Object Relations", category: "Object Relations", desc: "Paranoid-schizoid and depressive positions; projective identification." },
+      { year: 1950, name: "Erikson: Psychosocial Stages", category: "Ego Psychology", desc: "Eight stages of lifespan development." },
+      { year: 1951, name: "Winnicott: Transitional Objects", category: "Object Relations", desc: "Donald Winnicott introduces transitional objects and transitional space. Also develops the holding environment, the good-enough mother, and the true/false self (1960). Profound influence on attachment theory and infant observation." },
+      { year: 1952, name: "Wolpe: Desensitization", category: "Behavioural Therapy", desc: "First systematic behavioural treatment for phobias, based on Pavlov's conditioning principles and reciprocal inhibition. Bridges Pavlov's laboratory science to clinical practice." },
+      { year: 1953, name: "Lacan: Return to Freud", category: "Lacanian Psychoanalysis", desc: "Jacques Lacan's Rome Discourse — 'The Function and Field of Speech and Language in Psychoanalysis' — launches his radical re-reading of Freud through structural linguistics. Central propositions: the unconscious is structured like a language; desire is always the desire of the Other. Lacan's three registers — the Real, the Symbolic, and the Imaginary (RSI) — transform French and Latin American psychoanalysis. His Seminars (1953–1980) become the most influential ongoing psychoanalytic teaching of the 20th century. Less adopted in Scandinavia and the English-speaking world." },
+      { year: 1958, name: "Bowlby: Attachment Theory", category: "Attachment Theory", desc: "John Bowlby publishes the first of his three foundational papers on attachment — 'The Nature of the Child's Tie to his Mother' — drawing on evolutionary biology, ethology (Lorenz's imprinting), and control systems theory. Proposes that the human infant has a biologically based attachment behavioural system motivating proximity-seeking to a caregiver under threat. A radical departure from both Freudian drive theory and behaviourism. Bowlby's trilogy — Attachment (1969), Separation (1973), Loss (1980) — becomes the most empirically productive theory in developmental psychiatry. Foundational for Ainsworth's Strange Situation, Fonagy's mentalization, and virtually all contemporary relational psychotherapy." },
+      { year: 1960, name: "Perls: Gestalt Therapy", category: "Humanistic", desc: "Present-moment awareness, unfinished business, empty chair." },
+      { year: 1961, name: "Bion: Experiences in Groups", category: "Psychoanalysis", desc: "Wilfred Bion introduces basic assumptions governing unconscious group life. Separately develops container/contained (♀/♂), theory of thinking (beta elements, alpha function), and K-link. Foundational for group therapy, institutional psychiatry, and contemporary relational psychoanalysis." },
+      { year: 1962, name: "Ellis: Rational Emotive Therapy", category: "Cognitive", desc: "A-B-C model of irrational beliefs — precursor to CBT." },
+      { year: 1963, name: "Beck begins CBT", category: "Cognitive", desc: "Cognitive model: automatic thoughts, distortions, schemas." },
+      { year: 1966, name: "Meyer: Exposure and Response Prevention", category: "Behavioural Therapy", desc: "Victor Meyer treats two patients with severe OCD using prolonged exposure combined with strict prevention of compulsive rituals — first effective psychological treatment for OCD. Foundation of all OCD psychotherapy." },
+      { year: 1967, name: "Kernberg: Borderline Organization", category: "Object Relations", desc: "Identity diffusion, primitive defenses, reality testing — basis of TFP." },
+      { year: 1969, name: "Ainsworth: Strange Situation", category: "Attachment Theory", desc: "Mary Ainsworth develops the Strange Situation procedure — identifying three attachment patterns: secure, anxious-ambivalent, and avoidant. Mary Main later adds disorganised (1986). The most replicated paradigm in developmental psychology. Attachment patterns predict later emotional regulation, psychopathology, and — via Fonagy's Adult Attachment Interview — parenting across generations." },
+      { year: 1974, name: "Minuchin: Structural Family Therapy", category: "Systemic & Family Therapy", desc: "Salvador Minuchin publishes Families and Family Therapy — the foundational text of structural family therapy. Proposes that psychological symptoms are best understood as expressions of dysfunctional family structure: problematic boundaries (enmeshment or disengagement), hierarchies, alliances, and triangulation. Treatment involves joining the family system and restructuring its organisation through enactment, boundary-making, and reframing. Highly influential for eating disorders, psychosomatic illness, and child and adolescent psychiatry. Alongside Minuchin, the broader systemic tradition encompasses Milan systemic therapy (Selvini Palazzoli et al., 1978), strategic family therapy (Haley, Madanes), and later narrative therapy (White & Epston, 1990). The systemic tradition represents the only major psychotherapy paradigm to locate pathology in relational systems rather than individuals." },
+      { year: 1975, name: "Beck: Cognitive Therapy manual", category: "Cognitive", desc: "CBT for depression published — becomes gold standard." },
+      { year: 1975, name: "Kohut: Self Psychology", category: "Self Psychology", desc: "Narcissistic disorders; self-object needs; empathic attunement." },
+      { year: 1979, name: "Linehan develops DBT", category: "DBT", desc: "Dialectical Behavior Therapy; biosocial model for BPD." },
+      { year: 1980, name: "Foa & Goldstein: ERP manual", category: "Behavioural Therapy", desc: "Edna Foa formalises ERP in OCD into a replicable protocol: psychoeducation, hierarchy construction, graduated in vivo and imaginal exposure, strict response prevention. Subsequent RCTs confirm ERP as the most effective psychological treatment for OCD. Combined with SSRIs, ERP produces the best outcomes of any treatment modality." },
+      { year: 1980, name: "Yalom: Existential Psychotherapy", category: "Existential", desc: "Irvin Yalom's foundational clinical text translates existential philosophy into a systematic framework organised around four ultimate concerns: death, freedom, existential isolation, and meaninglessness. Particularly influential in group therapy, palliative care psychiatry, and long-term work where symptom-focused therapies feel insufficient." },
+      { year: 1983, name: "Motivational Interviewing (Miller)", category: "Brief Interventions", desc: "William Miller develops Motivational Interviewing — originally for problem drinking, rapidly extended to all presentations involving ambivalence about change. Collaborative, person-centred, and directional: evokes the patient's own motivation rather than imposing it. Core skills: OARS (open questions, affirmations, reflective listening, summaries) and recognising change talk. Formalised with Stephen Rollnick in their 1991 manual. Possibly the most widely used brief therapeutic intervention globally — embedded in addiction medicine, eating disorders, chronic disease management, and routine psychiatric practice. NICE-recommended for alcohol and substance use disorders." },
+      { year: 1984, name: "Kernberg: Severe PDs", category: "Object Relations", desc: "Framework for borderline/narcissistic pathology; structural interview." },
+      { year: 1985, name: "Mary Main: Adult Attachment Interview", category: "Attachment Theory", desc: "Mary Main and colleagues develop the Adult Attachment Interview (AAI) — a semi-structured interview that classifies adults' states of mind with respect to attachment by analysing the coherence and discourse of autobiographical narratives about childhood, not the content. Four patterns: secure-autonomous, dismissing, preoccupied, and unresolved/disorganised. The AAI is the empirical bridge between Ainsworth's infant work and Fonagy's mentalization theory: maternal AAI classification predicts infant Strange Situation classification with ~75% accuracy across independent samples. Foundational for understanding the intergenerational transmission of attachment and risk for personality disorder." },
+      { year: 1987, name: "IPT manual (Klerman)", category: "Interpersonal", desc: "Interpersonal Psychotherapy: grief, role transitions, disputes, deficits." },
+      { year: 1989, name: "EMDR (Shapiro)", category: "Trauma Therapies", desc: "Francine Shapiro develops Eye Movement Desensitisation and Reprocessing after observing that lateral eye movements while recalling distressing memories reduced their emotional charge. The full protocol involves alternating bilateral stimulation while the patient holds a traumatic memory in mind. The mechanism remains genuinely controversial — whether bilateral stimulation is the active ingredient or whether it works via exposure and working memory interference — but clinical evidence is robust. Multiple RCTs confirm efficacy for PTSD; NICE, WHO, and APA all recommend EMDR as a first-line trauma treatment." },
+      { year: 1990, name: "Schema Therapy (Young)", category: "Cognitive", desc: "Jeffrey Young develops Schema Therapy as an extension of CBT for personality disorders and chronic characterological difficulties. Organised around early maladaptive schemas — deeply held beliefs formed in childhood — and schema modes. Integrates CBT, object relations, attachment theory, and Gestalt. Experiential techniques (imagery rescripting, chair work, limited reparenting) address schema-level change. RCT evidence for borderline PD; widely used across Europe as a pragmatic integrative approach to personality pathology." },
+      { year: 1991, name: "Linehan: DBT Skills Manual", category: "DBT", desc: "Four skills: mindfulness, distress tolerance, emotion regulation, IE." },
+      { year: 1991, name: "Fonagy: Reflective Functioning", category: "Mentalization", desc: "Maternal reflective functioning predicts infant attachment." },
+      { year: 1993, name: "ACT (Hayes)", category: "Third Wave CBT", desc: "Acceptance, values clarification, cognitive defusion." },
+      { year: 1996, name: "OPD (Operationalized Psychodynamic Diagnosis)", category: "Psychodynamic Nosology", desc: "Published in Germany — a bridge between psychodynamic formulation and operationalised diagnostic criteria. Assesses five axes: illness experience, interpersonal relations, conflict, structure, and mental and psychosomatic disorders. Widely used in German-speaking psychiatry and psychotherapy (Germany, Austria, Switzerland) for treatment planning, outcome research, and training. Less adopted outside the German-speaking world. OPD-2 (2006) and OPD-3 (2022) followed." },
+      { year: 1998, name: "Kandel: psychotherapy changes the brain", category: "Theoretical Frameworks", desc: "Eric Kandel publishes 'A New Intellectual Framework for Psychiatry' in the American Journal of Psychiatry — arguing that all mental processes, including those altered by psychotherapy, are ultimately biological; that psychotherapy produces demonstrable and lasting changes in brain structure and function; and that psychiatry must integrate neuroscience and psychoanalysis rather than treat them as competing. Kandel's Nobel Prize (2000, shared with Carlsson and Greengard) for memory mechanisms lends these arguments enormous authority. The paper becomes one of the most cited theoretical texts in psychiatry, providing the conceptual justification for taking psychotherapy seriously as a biological treatment." },
+      { year: 1999, name: "MBCT developed", category: "Third Wave CBT", desc: "Mindfulness-Based CBT for depression relapse prevention." },
+      { year: 2004, name: "Bateman & Fonagy: MBT", category: "Mentalization", desc: "Mentalization-Based Treatment — RCT evidence for BPD." },
+      { year: 2006, name: "PDM published", category: "Psychodynamic Nosology", desc: "The Psychodynamic Diagnostic Manual published by a coalition of major psychoanalytic organisations as an alternative to DSM. Describes the whole person across personality (P-axis), mental functioning (M-axis), and subjective symptom experience (S-axis). Influential in psychodynamic training and in countries where psychodynamic approaches are integrated into public mental health." },
+      { year: 2006, name: "Kernberg: TFP Manual", category: "Object Relations", desc: "Transference-Focused Psychotherapy manualized." },
+      { year: 2014, name: "Gunderson & Links: Good Psychiatric Management", category: "Personality Disorder Treatment", desc: "John Gunderson and Paul Links publish the GPM manual for borderline personality disorder — a pragmatic, generalist treatment designed for non-specialist psychiatrists and trainees without intensive DBT or MBT training. Organised around an interpersonal hypersensitivity model: the core BPD vulnerability is intolerance of perceived abandonment or rejection. Combines case management, psychoeducation, chain analysis, and strategic use of the therapeutic relationship. RCT data show non-inferiority to DBT on several outcomes at lower cost and complexity. Significant because it democratises evidence-based BPD treatment across general psychiatry." },
+      { year: 2015, name: "ISTDP evidence base", category: "Short-Term Dynamic", desc: "Meta-analytic support across mood, somatic, PD presentations." },
+      { year: 2017, name: "PDM-2 published", category: "Psychodynamic Nosology", desc: "Second edition significantly expanded — adds dedicated sections for adolescents, children, and infants. Deepens the M-axis and integrates attachment theory, neuroscience, and empirical research more explicitly. Increasingly used in Scandinavian and European public mental health training as a complement to ICD/DSM." },
+      { year: 2026, name: "PDM-3 Pocket Edition published", category: "Psychodynamic Nosology", desc: "The PDM Third Edition published in pocket format — the most clinically portable edition to date. Continues the PDM tradition of whole-person diagnosis across P, M, and S axes while incorporating the latest empirical research in attachment, neuroscience, and personality assessment. Reflects growing integration of psychodynamic diagnosis into everyday clinical practice, particularly in European and Scandinavian public mental health settings alongside ICD-11." },
+    ]
+  }
+};
+
+const COLS = ["pharmacology","psychiatry","psychotherapy"];
+function getDecade(y) { return Math.floor(y / 10) * 10; }
+const MIN_DECADE = 1790, MAX_DECADE = 2020;
+const ALL_DECADES = [];
+for (let d = MIN_DECADE; d <= MAX_DECADE; d += 10) ALL_DECADES.push(d);
+
+function App() {
+  const [expanded, setExpanded] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const byDecade = useMemo(() => {
+    const map = {};
+    ALL_DECADES.forEach(d => { map[d] = { pharmacology:[], psychiatry:[], psychotherapy:[] }; });
+    COLS.forEach(col => {
+      DB[col].events.forEach(evt => {
+        const q = search.toLowerCase();
+        if (q && !evt.name.toLowerCase().includes(q) &&
+            !evt.desc?.toLowerCase().includes(q) &&
+            !evt.category?.toLowerCase().includes(q)) return;
+        const d = getDecade(evt.year);
+        if (map[d]) map[d][col].push(evt);
+      });
+    });
+    return ALL_DECADES
+      .map(d => ({ decade: d, cols: map[d] }))
+      .filter(row => COLS.some(c => row.cols[c].length > 0));
+  }, [search]);
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#F4F1EC", fontFamily:"Georgia, serif", display:"flex", flexDirection:"column" }}>
+      <div style={{ background:"#18110A", color:"#F0E8D8", padding:"22px 28px 16px", flexShrink:0 }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ fontSize:10, letterSpacing:3, color:"#A08060", marginBottom:4, fontFamily:"sans-serif", textTransform:"uppercase" }}>Interactive Reference</div>
+          <h1 style={{ margin:0, fontSize:26, fontWeight:700, letterSpacing:-0.5 }}>History of Psychiatry</h1>
+          <p style={{ margin:"5px 0 0", fontSize:13, color:"#C8B898", fontFamily:"sans-serif", fontWeight:300 }}>
+            Parallel decade view — psychopharmacology, neuroscience &amp; clinical psychiatry, and psychotherapy side by side
+          </p>
+        </div>
+      </div>
+
+      <div style={{ background:"#1E1510", borderBottom:"1px solid #3A2E20", position:"sticky", top:0, zIndex:20, flexShrink:0 }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"72px 1fr 1fr 1fr", gap:0 }}>
+          <div style={{ padding:"10px 8px" }}>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="🔍" title="Search"
+              style={{ width:52, padding:"5px 6px", border:"1px solid #4A3E30", borderRadius:6,
+                fontSize:12, fontFamily:"sans-serif", background:"#2A1E14", color:"#F0E8D8", outline:"none" }} />
+          </div>
+          {COLS.map(col => {
+            const cfg = DB[col];
+            return (
+              <div key={col} style={{ padding:"10px 14px", borderLeft:`3px solid ${cfg.accent}`,
+                display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:18 }}>{cfg.icon}</span>
+                <span style={{ fontSize:13, fontWeight:600, color:"#F0E8D8", fontFamily:"sans-serif" }}>{cfg.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:"auto", padding:"0 0 60px" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          {byDecade.map(({ decade, cols }) => (
+            <div key={decade} style={{
+              display:"grid", gridTemplateColumns:"72px 1fr 1fr 1fr",
+              borderBottom:"1px solid #E0D8CC", minHeight:40
+            }}>
+              <div style={{ padding:"14px 0 14px 12px", display:"flex", alignItems:"flex-start",
+                borderRight:"1px solid #D0C8B8", flexShrink:0 }}>
+                <span style={{ fontFamily:"monospace", fontWeight:700, fontSize:13,
+                  color:"#7A6858", letterSpacing:1, lineHeight:1.2 }}>{decade}s</span>
+              </div>
+              {COLS.map((col, ci) => {
+                const cfg = DB[col];
+                const evts = cols[col];
+                return (
+                  <div key={col} style={{
+                    padding: evts.length ? "10px 12px" : "0",
+                    borderLeft: ci === 0 ? "none" : "1px solid #E0D8CC",
+                    display:"flex", flexDirection:"column", gap:6,
+                    background: evts.length ? "#FDFBF7" : "transparent"
+                  }}>
+                    {evts.map((evt, i) => {
+                      const key = `${col}-${evt.year}-${i}`;
+                      const isOpen = expanded === key;
+                      return (
+                        <div key={key} onClick={() => setExpanded(isOpen ? null : key)}
+                          style={{
+                            borderRadius:8,
+                            border: isOpen ? `2px solid ${cfg.accent}` : "1px solid #DDD5C5",
+                            background: isOpen ? "#fff" : "#FAF7F2",
+                            boxShadow: isOpen ? `0 3px 12px ${cfg.accent}33` : "0 1px 3px rgba(0,0,0,0.06)",
+                            cursor:"pointer", overflow:"hidden", transition:"all 0.18s ease"
+                          }}>
+                          <div style={{ display:"flex", alignItems:"stretch" }}>
+                            <div style={{
+                              background: isOpen ? cfg.accent : cfg.light,
+                              color: isOpen ? "#fff" : cfg.accent,
+                              fontFamily:"monospace", fontWeight:700, fontSize:11,
+                              minWidth:36, display:"flex", alignItems:"center", justifyContent:"center",
+                              writingMode:"vertical-rl", textOrientation:"mixed",
+                              transform:"rotate(180deg)", padding:"8px 4px",
+                              letterSpacing:0.5, flexShrink:0, transition:"all 0.18s ease"
+                            }}>
+                              {evt.year}
+                            </div>
+                            <div style={{ padding:"8px 10px", flex:1, minWidth:0 }}>
+                              <div style={{ fontWeight:700, fontSize:13, color:"#1A1209", lineHeight:1.3 }}>
+                                {evt.name}
+                              </div>
+                              <div style={{ fontSize:10, fontFamily:"sans-serif", color:cfg.accent,
+                                fontWeight:600, marginTop:2, textTransform:"uppercase", letterSpacing:0.4 }}>
+                                {evt.category}
+                              </div>
+                              {isOpen && (
+                                <div style={{ marginTop:8, paddingTop:8, borderTop:`1px solid ${cfg.light}`,
+                                  fontSize:12, fontFamily:"sans-serif", color:"#4A3C2E", lineHeight:1.6 }}>
+                                  {evt.desc}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
